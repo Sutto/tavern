@@ -26,15 +26,51 @@ describe Tavern::Hub do
 
   describe 'the primary hub' do
 
-    it 'should let you query if something is the primary hub'
+    after :each do
+      # Force a final reset
+      Tavern.hub = nil
+    end
 
-    it 'should run the load hook when the hub is changed'
+    it 'should let you query if something is the primary hub' do
+      hub.should respond_to(:primary?)
+      hub.should_not be_primary
+      Tavern.hub.should_not == hub
+      Tavern.hub.should be_primary
+    end
 
-    it 'should unset it when changing the hub'
+    it 'should run the load hook when the hub is changed' do
+      Tavern.hub # Force it to have loaded before hand.
+      called = 0
+      found_hub = nil
+      ActiveSupport.on_load(:tavern_hub) do |hub|
+        called += 1
+        found_hub = hub
+      end
+      called = 0
+      Tavern.hub = hub
+      called.should == 1
+      found_hub.should == hub
+    end
 
-    it 'should set it to primary when setting it to the hub value'
+    it 'should unset it when changing the hub' do
+      hub = Tavern.hub
+      hub.should be_primary
+      Tavern.hub = Tavern::Hub.new
+      hub.should_not be_primary
+    end
 
-    it 'always set the default to be primary'
+    it 'should set it to primary when setting it to the hub value' do
+      hub = Tavern::Hub.new
+      hub.should_not be_primary
+      Tavern.hub = hub
+      hub.should be_primary
+    end
+
+    it 'always set the default to be primary' do
+      # Force a recet to nil
+      Tavern.hub = nil
+      Tavern.hub.should be_primary
+    end
 
   end
 

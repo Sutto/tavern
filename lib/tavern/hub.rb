@@ -2,6 +2,7 @@ require 'tavern/subscription'
 require 'tavern/subscriptions'
 require 'active_support/core_ext/module/delegation'
 require 'active_support/core_ext/object/blank'
+require 'active_support/lazy_load_hooks'
 
 module Tavern
 
@@ -93,9 +94,9 @@ module Tavern
 
     def primary=(value)
       value = !!value
-      if value != @value
-        @value = value
-        ActiveSupport.run_load_hooks :tavern_hub, self
+      if value != @primary
+        @primary = value
+        ActiveSupport.run_load_hooks :tavern_hub, self if @primary
       end
     end
 
