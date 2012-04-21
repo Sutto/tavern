@@ -95,7 +95,7 @@ module Tavern
       value = !!value
       if value != @value
         @value = value
-        ActiveSupport.run_load_hooks :smeg_head_hub, self
+        ActiveSupport.run_load_hooks :tavern_hub, self
       end
     end
 
