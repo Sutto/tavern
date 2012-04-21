@@ -4,8 +4,8 @@ require File.expand_path('../lib/tavern/version', __FILE__)
 Gem::Specification.new do |gem|
   gem.authors       = ["Darcy Laycock"]
   gem.email         = ["sutto@sutto.net"]
-  gem.description   = %q{TODO: Write a gem description}
-  gem.summary       = %q{TODO: Write a gem summary}
+  gem.description   = %q{Tavern implements simple pub / sub systems for Rails applications with a simple, extendable architecture and minimal api surface area.}
+  gem.summary       = %q{Simple pubsub for Ruby apps.}
   gem.homepage      = ""
 
   gem.files         = `git ls-files`.split($\)
