@@ -40,6 +40,9 @@ The core methods on this object (and any new Taver Hub) are:
 The idea behind this decoupled architecture is that it doesn't matter how the middle layer is implemented,
 you can just publish and receive messages with no worries. At the moment, subscriptions happen in app.
 
+For conveinience sake, we also proxy `subscribe` and `publish` on the `Tavern` object to the default hub
+at `Tavern.hub`.
+
 ## Contributing
 
 1. Fork it
