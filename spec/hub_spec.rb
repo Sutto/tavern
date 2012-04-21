@@ -15,6 +15,10 @@ describe Tavern::Hub do
         published << ctx
       end
 
+      def times_called
+        published.size
+      end
+
     end
   end
 
@@ -76,29 +80,75 @@ describe Tavern::Hub do
 
   describe '#subscribe' do
 
-    it 'should let you subscribe to a top level item'
+    let(:tracker)  { Struct.new(:called).new(0) }
+    let(:callback) { lambda { |e| tracker.called += 1 } }
 
-    it 'should let you subscribe to a nested item'
+    it 'should let you subscribe to a top level item' do
+      hub.subscribe('x', &callback)
+      expect { hub.publish('x') }.to change tracker, :called
+      expect { hub.publish('x:y') }.to change tracker, :called
+      expect { hub.publish('x:y:z') }.to change tracker, :called
+    end
 
-    it 'should let you pass an object'
+    it 'should let you subscribe to a nested item' do
+      hub.subscribe('x:y:z', &callback)
+      expect { hub.publish('x:y:z') }.to change tracker, :called
+      expect { hub.publish('x:y') }.to_not change tracker, :called
+      expect { hub.publish('x') }.to_not change tracker, :called
+    end 
 
-    it 'should let you pass a block'
+    it 'should let you pass an object' do
+      callback = Struct.new(:tracker).new(tracker)
+      def callback.call(e); tracker.called += 1; end
+      hub.subscribe('x', callback)
+      expect { hub.publish('x') }.to change tracker, :called
+    end
 
-    it 'should return a subscription'
+    it 'should let you pass a block' do
+      hub.subscribe('x') { |e| tracker.called += 1 }
+      expect { hub.publish('x') }.to change tracker, :called
+    end
 
-    it 'should automatically subscribe to lower level nested events'
+    it 'should return a subscription' do
+      subscription = hub.subscribe('x', &callback)
+      subscription.should be_present
+      subscription.should be_a Tavern::Subscription
+    end
 
-    it 'should raise an error when subscribing with an object that does not provide call'
+    it 'should raise an error when subscribing with an object that does not provide call' do
+      expect do
+        hub.subscribe 'test', Object.new
+      end.to raise_error ArgumentError
+    end
 
   end
 
   describe '#unsubscribe' do
 
-    it 'should remove an object from the subscription pool'
+    let(:tracker) { Struct.new(:count, :calls).new(0, []) }
 
-    it 'should return the subscription'
+    let!(:subscription) do
+      t = tracker
+      hub.subscribe 'test' do |e|
+        t.count += 1
+        t.calls << e
+      end
+    end
 
-    it 'should do nothing with a blank item'
+    it 'should remove an object from the subscription pool' do
+      expect { hub.publish 'test' }.to change tracker, :count
+      hub.unsubscribe subscription
+      expect { hub.publish 'test' }.to_not change tracker, :count
+    end
+
+    it 'should return the subscription' do
+      hub.unsubscribe(subscription).should == subscription
+    end
+
+    it 'should do nothing with a blank item' do
+      hub.unsubscribe(nil).should be_nil
+      hub.unsubscribe('').should be_nil
+    end
 
   end
 
@@ -140,11 +190,12 @@ describe Tavern::Hub do
       hub.publish 'hello:world', {}
     end
 
-    it 'should notify all subscriptions under the path'
-
-    it 'should not notify unmatched subscriptions on a simple case'
-
-    it 'should not notify unmatched subscriptions on a nested case'
+    it 'should notify all subscriptions under the path' do
+      expect { hub.publish 'hello:world' }.to change top_level_a, :times_called
+      expect { hub.publish 'hello:world' }.to change nested_a, :times_called
+      expect { hub.publish 'foo' }.to change top_level_b, :times_called
+      expect { hub.publish 'foo' }.to_not change nested_b, :times_called
+    end
 
   end
 
